@@ -23,17 +23,42 @@ import com.alberwall.downloader.exceptions.ResponseException;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Download Client Interface
+ * @param <P>
+ */
 public interface DownloadClient<P extends ProtocolParameters> {
 
+    /**
+     * query length of file in remote server
+     * @param source file in remote server
+     * @return the file length
+     */
     long queryFileLength(Source<P> source) throws IOException, CancelException, RequestException, ResponseException;
 
+    /**
+     * connect server
+     * @param source server info with connect parameters
+     * @param start start position of file, inclusive
+     * @param end end position of file, inclusive
+     */
     void connect(Source<P> source, long start, long end) throws IOException, CancelException, RequestException;
 
+    /**
+     * return the input stream for downloading file
+     */
     InputStream getInputStream() throws IOException;
 
+    /**
+     * indicate the server whether support breakpoint resume or not.
+     * @return
+     * @throws IOException
+     */
     boolean isResumeSupported() throws IOException;
 
-    void cancel();
 
+    /**
+     * Close the client.
+     */
     void close();
 }

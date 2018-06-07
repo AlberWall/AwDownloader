@@ -60,19 +60,19 @@ public class MainActivity extends AppCompatActivity {
     boolean[] flag = new boolean[]{false, false, false, false, false, false};
     static String[] urls = new String[]{
             "http://www.periodicooficial.oaxaca.gob.mx/files/2011/05/EXT02-2011-05-19.pdf",
-            "https://powercam.wondershare.cc/files/vlogit/mall/sticker/download/ios/Explosions.zip",
-            "https://powercam.wondershare.cc/files/vlogit/mall/filter/download/ios/BW.zip",
-            "http://p.gdown.baidu.com/733e9b836a7a2d200ce06d4a03e479dcda55adb18ec3252658c7bf16039f618fd146f4eb9d6f27529488f08edc991735413da3e487a326256adcab24e67a265b421312a9225d450885468cb685eec8e52a17bea85ba32c2623b66b0ac2e2920ab9ada19bf28e02a45b166975a4c3d60a3369965d0ecf55c90339a66d12fa72ac69e3156d7abb0a071538926fee90cd00679905df08bc6a7852529194dea17b5b7d4388f1bf35b988cbe8e6cc31046bd0f5a4c7612064e7de8168576bde25cb164823a96abac18fbc8d1cd691de40e917333fd08f750967104903d830bb40cb66dee0d029b983fc01",
-            "https://codeload.github.com/MindorksOpenSource/PRDownloader/zip/master",
+            "http://tdc-www.harvard.edu/Python.pdf",
+            "http://www.dsf.unica.it/~fiore/LearningPython.pdf",
+            "http://www.souravsengupta.com/cds2015/python/LPTHW.pdf",
+            "https://do1.dr-chuck.com/pythonlearn/EN_us/pythonlearn.pdf",
             "http://www.lingala.net/zip4j/downloads/zip4j_src_1.3.2.zip",
     };
 
     static String[] name = new String[]{
             "java_concurrency.pdf",
-            "Explosions_ios.zip",
-            "BW_ios.zip",
-            "baiduyind.apk",
-            "prdownload.zip",
+            "Python.pdf",
+            "LearningPython.pdf",
+            "LPTHW.pdf",
+            "pythonlearn.pdf",
             "zip4j_src_1.3.2.zip"
     };
 

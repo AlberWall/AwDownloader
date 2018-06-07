@@ -84,15 +84,11 @@ public class HttpRealClient implements DownloadClient<HttpParameters> {
         return mResumeSupported;
     }
 
-    @Override
-    public void cancel() {
-        mCancelled = true;
-    }
-
     @SuppressWarnings("RedundantThrows")
     @Override
     public void close() {
-        // No op: should not close input stream here.(okio not thread-safe)
+        // should not close input stream here.(okio not thread-safe)
+        mCancelled = true;
     }
 
     private void realConnect(Source<HttpParameters> source, String method, long start, long end)
