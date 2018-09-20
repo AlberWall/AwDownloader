@@ -78,7 +78,7 @@ public class AwDownloader {
 
     @UiThread
     public void startDownload(DownloadRequest req) {
-        dispatcher().enqueue(req);
+        req.enqueue();
     }
 
     @UiThread

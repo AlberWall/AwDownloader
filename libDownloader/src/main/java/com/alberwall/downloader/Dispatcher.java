@@ -23,6 +23,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -51,7 +52,7 @@ final class Dispatcher {
     }
 
     @UiThread
-    synchronized void enqueue(DownloadRequest req) {
+    synchronized void enqueue(DownloadRequest req) throws RejectedExecutionException, NullPointerException {
         if (!mRequests.contains(req)) {
             mRequests.add(req);
             TaskRunnable task = new TaskRunnable(new PrepareTask(req, mDownloader));
@@ -86,7 +87,7 @@ final class Dispatcher {
         downloadExecutorService().shutdown();
     }
 
-    void enqueue(FileBlockRequest request) {
+    void enqueue(FileBlockRequest request) throws RejectedExecutionException, NullPointerException {
         TaskRunnable task = new TaskRunnable(new FileBlockDownloadTask(request, mDownloader));
         request.setRunner(task);
         downloadExecutorService().execute(task);

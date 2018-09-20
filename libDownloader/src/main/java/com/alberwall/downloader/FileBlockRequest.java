@@ -106,6 +106,10 @@ public class FileBlockRequest implements Comparable<FileBlockRequest> {
         retryTimes.incrementAndGet();
     }
 
+    int getRetryTimes() {
+        return retryTimes.get();
+    }
+
     @Override
     public int compareTo(@NonNull FileBlockRequest o) {
         int cmp = rawRequest.compareTo(o.rawRequest);

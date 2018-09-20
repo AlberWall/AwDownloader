@@ -19,6 +19,7 @@ package com.alberwall.downloader;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 
+import com.alberwall.downloader.exceptions.RequestException;
 import com.alberwall.downloader.ftp.FtpParameters;
 import com.alberwall.downloader.ftp.FtpSource;
 import com.alberwall.downloader.http.HttpParameters;
@@ -28,6 +29,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.RejectedExecutionException;
 
 @SuppressWarnings("WeakerAccess")
 public class DownloadRequest implements Comparable<DownloadRequest> {
@@ -38,7 +40,7 @@ public class DownloadRequest implements Comparable<DownloadRequest> {
     public static final int STATE_DOWNLOAD_QUEUE = 3;
     public static final int STATE_DOWNLOADING = 4;
     public static final int STATE_COMPLETED = 5;
-    public static final int STATE_CANCELLED = 6;
+    public static final int STATE_INTERRUPTED = 6;
     public static final int STATE_FAILED = 7;
 
     @IntDef({
@@ -48,7 +50,7 @@ public class DownloadRequest implements Comparable<DownloadRequest> {
             STATE_DOWNLOAD_QUEUE,
             STATE_DOWNLOADING,
             STATE_COMPLETED,
-            STATE_CANCELLED,
+            STATE_INTERRUPTED,
             STATE_FAILED,
     })
     public @interface DownloadState {
@@ -94,6 +96,7 @@ public class DownloadRequest implements Comparable<DownloadRequest> {
 
     @DownloadState
     private volatile int state;
+    private volatile boolean userCanceled = false;
     private volatile boolean markDelivered = false;
     private volatile boolean cleanIfCancelled = false;
     private final AwDownloader downloader;
@@ -140,17 +143,27 @@ public class DownloadRequest implements Comparable<DownloadRequest> {
             public void onFailed(FileBlockRequest req, Exception error) {
                 if (req.canRetry(error)) {
                     req.incrementRetry();
-                    downloader.dispatcher().enqueue(req);
-                } else {
-                    for (FileBlockRequest blockReq : blockRequests) {
-                        if (!blockReq.equals(req)) {
-                            blockReq.cancel(false);
-                        }
-                    }
 
-                    downloader.dispatcher().deliverFailed(req.rawRequest, req.fileBlock, error);
-                    downloader.dispatcher().failed(DownloadRequest.this, error);
+                    try {
+                        downloader.dispatcher().enqueue(req);
+                        return;
+                    } catch (RejectedExecutionException e) {
+                        error = new RequestException("Rejected when retry(" + req.getRetryTimes() +
+                                ") download block{" + req.fileBlock + "}");
+                    } catch (Exception e) {
+                        error = new RequestException(e.toString() + " when retry(" + req.getRetryTimes() +
+                                ") download block{" + req.fileBlock + "}");
+                    }
                 }
+
+                for (FileBlockRequest blockReq : blockRequests) {
+                    if (!blockReq.equals(req)) {
+                        blockReq.cancel(false);
+                    }
+                }
+
+                downloader.dispatcher().deliverFailed(req.rawRequest, req.fileBlock, error);
+                downloader.dispatcher().failed(DownloadRequest.this, error);
 
             }
         };
@@ -184,12 +197,19 @@ public class DownloadRequest implements Comparable<DownloadRequest> {
     }
 
     public void enqueue() {
-        downloader.dispatcher().enqueue(this);
+        try {
+            downloader.dispatcher().enqueue(this);
+        } catch (RejectedExecutionException e) {
+            // Rejected happened Only if ThreadPoolExecutor is or will be shutting down
+            Exception err = new RequestException("Rejected When prepare " + Arrays.toString(source));
+            setFailed(err);
+        }
     }
 
     public synchronized void cancel(boolean cleanTmpFile) {
         cleanIfCancelled = cleanTmpFile;
-        setState(STATE_CANCELLED);
+        setState(STATE_INTERRUPTED);
+        userCanceled = true;
         if (null != runner) {
             runner.cancel();
         }
@@ -200,7 +220,7 @@ public class DownloadRequest implements Comparable<DownloadRequest> {
     }
 
     public boolean isCancelled() {
-        return STATE_CANCELLED == state;
+        return userCanceled;
     }
 
     public synchronized void setFileBlockRequests(List<FileBlockRequest> fileBlockRequests) {
